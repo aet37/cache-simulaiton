@@ -1,4 +1,4 @@
-classdef Cache
+classdef (ConstructOnLoad = true) Cache
     %CACHE Object containing a customizable level of cache
     
     properties
