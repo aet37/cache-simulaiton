@@ -15,6 +15,10 @@ classdef (ConstructOnLoad = true) Cache
         function obj = Cache(LayerSize, AccessLatency, BlockSize, SetAssociativity, Policy, varargin)
             %CACHE Construct an instance of this class
             %   Notes: LayerSize is total capacity of cache in bytes
+            %
+            %          Data initialization should be 3D Matrix with:
+            %              [LayerSize/BlockSize, BlockSize/SetAssociativity, SetAssociativity]
+            %
             
             % Parse input for data initialization
             p = inputParser;
@@ -31,9 +35,15 @@ classdef (ConstructOnLoad = true) Cache
             
             % Initialize data
             if D_in == -1       % Initalize to all 0s if no initialization matrix specified
-                obj.Data = zeros([LayerSize/BlockSize BlockSize]);
+                obj.Data = zeros([LayerSize/BlockSize BlockSize/SetAssociativity SetAssociativity]);
             else                % Initalize to all initalization array specified
-                obj.Data = D_in;
+                if length(size(D_in)) == 3
+                    obj.Data = D_in;
+                else
+                    ME = MException('Cache Data Initialization Error', ...
+                    'Cache data should be 3D Matrix of size [LayerSize/BlockSize, BlockSize/SetAssociativity, SetAssociativity]', D_in);
+                    throw(ME);
+                end
             end
             
         end
