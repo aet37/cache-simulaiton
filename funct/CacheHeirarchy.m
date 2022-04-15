@@ -7,7 +7,7 @@ classdef CacheHeirarchy
     %
     
     properties
-        cacheVector% = Cache(32, 2, 2, 2, 2);
+        cacheVector
         numCache
     end
     
@@ -34,11 +34,18 @@ classdef CacheHeirarchy
             end
         end
         
-        function outputArg = method1(obj, inputArg)
-            %METHOD1 Summary of this method goes here
+        function read(addr, arrive_time)
+            %read Perform read from cache
             %   Detailed explanation goes here
-            
-            outputArg = obj.Property1 + inputArg;
+
+            for ii = 1:obj.numCache
+                res = obj.cacheVector(ii).read(arg);
+
+                % Logic here
+
+                % Add cycle time
+
+            end
         end
     end
 end
