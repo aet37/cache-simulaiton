@@ -8,11 +8,13 @@ classdef (ConstructOnLoad = true) Cache
         SetAssociativity
         Policy
         
+        Valid
+        Tag
         Data
     end
     
     methods
-        function obj = Cache(LayerSize, AccessLatency, BlockSize, SetAssociativity, Policy, varargin)
+        function obj = Cache(LayerSize, AccessLatency, BlockSize, SetAssociativity, Policy)
             %CACHE Construct an instance of this class
             %   Notes: LayerSize is total capacity of cache in bytes
             %
@@ -20,31 +22,15 @@ classdef (ConstructOnLoad = true) Cache
             %              [LayerSize/BlockSize, BlockSize/SetAssociativity, SetAssociativity]
             %
             
-            % Parse input for data initialization
-            p = inputParser;
-            addOptional(p, 'DataInit', -1);
-            parse(p, varargin{:});
-            D_in = p.Results.DataInit;
-            
             % Setup variables
             obj.LayerSize = LayerSize;
             obj.AccessLatency = AccessLatency;
             obj.BlockSize = BlockSize;
             obj.SetAssociativity = SetAssociativity;
             obj.Policy = Policy;
-            
-            % Initialize data
-            if D_in == -1       % Initalize to all 0s if no initialization matrix specified
-                obj.Data = zeros([LayerSize/BlockSize BlockSize/SetAssociativity SetAssociativity]);
-            else                % Initalize to all initalization array specified
-                if length(size(D_in)) == 3
-                    obj.Data = D_in;
-                else
-                    ME = MException('Cache Data Initialization Error', ...
-                    'Cache data should be 3D Matrix of size [LayerSize/BlockSize, BlockSize/SetAssociativity, SetAssociativity]', D_in);
-                    throw(ME);
-                end
-            end
+            obj.Data = zeros([LayerSize/BlockSize BlockSize/SetAssociativity SetAssociativity]);
+            obj.Valid = false([LayerSize/BlockSize SetAssociativity]);
+            obj.Tag = zeros([LayerSize/BlockSize SetAssociativity]);
             
         end
         
