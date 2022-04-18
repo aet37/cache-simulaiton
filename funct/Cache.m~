@@ -80,9 +80,8 @@ classdef (ConstructOnLoad = true) Cache
                     % after a miss is returned?
                 end
                 % Write to LRU block
-                sprintf('Tag Before = %d',obj.Tag(set_index,LRU_index(1)))
                 obj.Tag(set_index,LRU_index(1)) = tag;
-                sprintf('Tag After = %d',obj.Tag(set_index,LRU_index(1)))
+                sprintf('Tag = %d',obj.Tag(set_index,(1))
                 % Set Result = MISS
                 result = 0;
             else
