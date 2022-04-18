@@ -47,6 +47,38 @@ classdef CacheHeirarchy
 
             end
         end
+        
+        function write_back_allocate(addr,arrive_time)
+            % write_back_allocate Perform write from cache
+            %
+            % Write Back Policy:
+            %   Main Memory is not updated until a cache block needs to be
+            %   replaced
+            %
+            % Write Allocate Policy:
+            %   Any newly written data is loaded into the cache instead of
+            %   main memory
+            %
+            % Inputs:
+            %       - addr: array that holds [tag L2-L1_index L1_index
+            %       offset]
+            %       - arrive_time: Time by which the write operation needs 
+            %           to be completed by
+            %
+            
+            
+            for ii = 1:obj.numCache
+                res = obj.cacheVector(ii).write_back_allocate(addr(1),addr(3));
+
+                % Check if hit took place
+                if res == 1
+                    break
+                end
+                % Add cycle time
+                % Check if latency is valid for the given layer
+                % If not, throw error
+            end
+        end
     end
 end
 
