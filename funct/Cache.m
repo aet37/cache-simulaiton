@@ -118,6 +118,7 @@ classdef (ConstructOnLoad = true) Cache < handle
 
         % Write Method: Write Through & Non- Write Allocate
         function result = write_through_nonallocate(obj,tag,set_index)
+            disp('Write Func Called')
             % write_through_nonallocate Write function implementing the Write
             % Through and Non- Write Allocate policies
             %
@@ -141,8 +142,10 @@ classdef (ConstructOnLoad = true) Cache < handle
                 obj.Tag(set_index,index) = tag;
                 result = 1;
             end
-
-
+            % Update LRU
+            update_LRU = find(obj.LRU(set_index,:) ~= obj.SetAssociativity);
+            obj.LRU(set_index,update_LRU) = obj.LRU(update_LRU) + 1;
+            obj.LRU(set_index,index) = 1;
         end
     end
 end
