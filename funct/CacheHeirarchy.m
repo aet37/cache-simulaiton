@@ -9,6 +9,8 @@ classdef CacheHeirarchy
     properties
         cacheVector
         numCache
+
+        currentCycle
     end
     
     methods
@@ -25,6 +27,7 @@ classdef CacheHeirarchy
             %
 
             obj.numCache = numCache;
+            obj.currentCycle = 0;
 
             % Initialize caches
             for ii = 1:numCache
@@ -33,52 +36,77 @@ classdef CacheHeirarchy
                 obj.cacheVector = [obj.cacheVector c];
             end
         end
-        
-        function read(addr, arrive_time)
-            %read Perform read from cache
-            %   Detailed explanation goes here
 
-            for ii = 1:obj.numCache
-                res = obj.cacheVector(ii).read(arg);
-
-                % Logic here
-
-                % Add cycle time
-
+        % Function to parse any input for simulation
+        function command(obj, op, tag, l2_l1, l1, offset, arrival_time)
+            %command Run specified command
+            
+            if offset ~= 'x'
+                dispy('Warning: Offset not used ... ')
             end
-        end
-        
-        function write_back_allocate(addr,arrive_time)
-            % write_back_allocate Perform write from cache
-            %
-            % Write Back Policy:
-            %   Main Memory is not updated until a cache block needs to be
-            %   replaced
-            %
-            % Write Allocate Policy:
-            %   Any newly written data is loaded into the cache instead of
-            %   main memory
-            %
-            % Inputs:
-            %       - addr: array that holds [tag L2-L1_index L1_index
-            %       offset]
-            %       - arrive_time: Time by which the write operation needs 
-            %           to be completed by
-            %
-            
-            
-            for ii = 1:obj.numCache
-                res = obj.cacheVector(ii).write_back_allocate(addr(1),addr(3));
 
-                % Check if hit took place
-                if res == 1
-                    break
+            if op == 'r'
+                for ii = 1:obj.numCache
+                    if ii == 1  % For l1 cache
+                        res = obj.cacheVector(ii).read(bin2dec([dec2bin(tag) dec2bin(l2_l1)]), l1);
+                    elseif ii == 2  % For l2 cache
+                        res = obj.cacheVector(ii).read(tag, bin2dec([dec2bin(l2_l1) dec2bin(l1)]));
+                    else
+                        break;
+                    end
+    
+                    % Add cycle time
+                    if arrival_time > obj.currentCycle
+                        obj.currentCycle = arrival_time + obj.cacheVector(ii).AccessLatency;
+                    else
+                        obj.currentCycle = obj.currentCycle + obj.cacheVector(ii).AccessLatency;
+                    end
+                    
+                    % If there is hit, break out of loop
+                    if res
+                        break;
+                    end
                 end
-                % Add cycle time
-                % Check if latency is valid for the given layer
-                % If not, throw error
+            elseif op == 'w'
+
+            else
+                error('Invalid Cache write command');
             end
+
+            
         end
+        
+%         function write_back_allocate(addr,arrive_time)
+%             % write_back_allocate Perform write from cache
+%             %
+%             % Write Back Policy:
+%             %   Main Memory is not updated until a cache block needs to be
+%             %   replaced
+%             %
+%             % Write Allocate Policy:
+%             %   Any newly written data is loaded into the cache instead of
+%             %   main memory
+%             %
+%             % Inputs:
+%             %       - addr: array that holds [tag L2-L1_index L1_index
+%             %       offset]
+%             %       - arrive_time: Time by which the write operation needs 
+%             %           to be completed by
+%             %
+%             
+%             
+%             for ii = 1:obj.numCache
+%                 res = obj.cacheVector(ii).write_back_allocate(addr(1),addr(3));
+% 
+%                 % Check if hit took place
+%                 if res == 1
+%                     break
+%                 end
+%                 % Add cycle time
+%                 % Check if latency is valid for the given layer
+%                 % If not, throw error
+%             end
+%         end
     end
 end
 
