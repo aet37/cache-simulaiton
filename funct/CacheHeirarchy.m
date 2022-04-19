@@ -1,4 +1,4 @@
-classdef CacheHeirarchy
+classdef CacheHeirarchy < handle
     %CACHEHEIRARCHY Object containing multiple Cache objects, used to run
     %simulation
     %
@@ -38,7 +38,14 @@ classdef CacheHeirarchy
         end
 
         % Function to parse any input for simulation
-        function command(obj, op, tag, l2_l1, l1, offset, arrival_time)
+        function command(obj, op, tag, l2_l1, l1, offset, arrival_time, varargin)
+            % Additional inputs
+            p = inputParser;
+            addOptional(p, 'l3_l2', 0, @isnumeric);
+            parse(p, varargin{:});
+
+            l3_l2 = p.Results.l3_l2;
+
             %command Run specified command
             
             if offset ~= 'x'
@@ -51,7 +58,10 @@ classdef CacheHeirarchy
                         res = obj.cacheVector(ii).write(bin2dec([dec2bin(tag) dec2bin(l2_l1)]), l1);
                     elseif ii == 2  % For l2 cache
                         res = obj.cacheVector(ii).write(tag, bin2dec([dec2bin(l2_l1) dec2bin(l1)]));
+                    elseif ii == 3  % For l3 cache
+                        res = obj.cacheVector(ii).write(tag, bin2dec([dec2bin(l3_l2) dec2bin(l2_l1) dec2bin(l1)]));
                     else
+                        print('Warning: Not configured for over L3 (reusults may be innacurate) ...')
                         break;
                     end
     
@@ -68,45 +78,34 @@ classdef CacheHeirarchy
                     end
                 end
             elseif op == 'r'
-
+                for ii = 1:obj.numCache
+                    if ii == 1  % For l1 cache
+                        res = obj.cacheVector(ii).read(bin2dec([dec2bin(tag) dec2bin(l2_l1)]), l1);
+                    elseif ii == 2  % For l2 cache
+                        res = obj.cacheVector(ii).read(tag, bin2dec([dec2bin(l2_l1) dec2bin(l1)]));
+                    elseif ii == 3  % For l3 cache
+                        res = obj.cacheVector(ii).read(tag, bin2dec([dec2bin(l3_l2) dec2bin(l2_l1) dec2bin(l1)]));
+                    else
+                        print('Warning: Not configured for over L3 (reusults may be innacurate) ...')
+                        break;
+                    end
+    
+                    % Add cycle time
+                    if arrival_time > obj.currentCycle
+                        obj.currentCycle = arrival_time + obj.cacheVector(ii).AccessLatency;
+                    else
+                        obj.currentCycle = obj.currentCycle + obj.cacheVector(ii).AccessLatency;
+                    end
+                    
+                    % If there is hit, break out of loop
+                    if res
+                        break;
+                    end
+                end
             else
-                error('Invalid Cache write command');
+                error('Invalid Cache access command');
             end
-
-            
         end
-        
-%         function write_back_allocate(addr,arrive_time)
-%             % write_back_allocate Perform write from cache
-%             %
-%             % Write Back Policy:
-%             %   Main Memory is not updated until a cache block needs to be
-%             %   replaced
-%             %
-%             % Write Allocate Policy:
-%             %   Any newly written data is loaded into the cache instead of
-%             %   main memory
-%             %
-%             % Inputs:
-%             %       - addr: array that holds [tag L2-L1_index L1_index
-%             %       offset]
-%             %       - arrive_time: Time by which the write operation needs 
-%             %           to be completed by
-%             %
-%             
-%             
-%             for ii = 1:obj.numCache
-%                 res = obj.cacheVector(ii).write_back_allocate(addr(1),addr(3));
-% 
-%                 % Check if hit took place
-%                 if res == 1
-%                     break
-%                 end
-%                 % Add cycle time
-%                 % Check if latency is valid for the given layer
-%                 % If not, throw error
-%             end
-%         end
     end
 end
 

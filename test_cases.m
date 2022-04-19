@@ -12,7 +12,7 @@ setup_params = [32000 1 32 4 "write-back+write-allocate";
 % Define cache object
 cache_sim = CacheHeirarchy(2, setup_params);
 
-%% Warmup Test cases
+%% Warmup
 
 cache_sim.command('r', 408, 1, 54, 'x', 1);
 cache_sim.command('r', 409, 1, 54, 'x', 2);
@@ -55,22 +55,48 @@ cache_sim.command('r', 417, 2, 54, 'x', 10002);
 cache_sim.command('r', 423, 2, 54, 'x', 10152);
 cache_sim.command('r', 416, 1, 54, 'x', 10153);
 cache_sim.command('r', 414, 2, 54, 'x', 10154);
-
 cache_sim.command('r', 422, 2, 54, 'x', 10304);
 cache_sim.command('r', 418, 2, 54, 'x', 10305);
 cache_sim.command('r', 413, 2, 54, 'x', 10306);
 cache_sim.command('r', 417, 1, 54, 'x', 10456);
 cache_sim.command('r', 431, 3, 54, 'x', 10457);
 cache_sim.command('r', 431, 2, 54, 'x', 10458);
-cache_sim.command('r', 429, 3, 54, 'x', 10609);
-cache_sim.command('r', 424, 2, 54, 'x', 10611);
-cache_sim.command('r', 426, 2, 54, 'x', 10761);
-cache_sim.command('r', 426, 2, 54, 'x', 10762);
-cache_sim.command('r', 423, 2, 54, 'x', 10763);
-cache_sim.command('r', 423, 2, 54, 'x', 10913);
+cache_sim.command('r', 429, 3, 54, 'x', 10459);
+cache_sim.command('r', 424, 2, 54, 'x', 10609);
+cache_sim.command('r', 426, 3, 54, 'x', 10610);
+cache_sim.command('r', 426, 3, 54, 'x', 10611);
+cache_sim.command('r', 430, 2, 54, 'x', 10761);
+cache_sim.command('r', 427, 3, 54, 'x', 10762);
+cache_sim.command('r', 430, 3, 54, 'x', 10763);
+cache_sim.command('r', 428, 2, 54, 'x', 10913);
 
-%% Test Case 2: Random Write
+%% Test Case 2: Random Read/Write
 
+cache_sim.command('w', 420, 2, 54, 'x', 10000);
+cache_sim.command('r', 412, 2, 54, 'x', 10001);
+cache_sim.command('w', 417, 1, 54, 'x', 10002);
+cache_sim.command('r', 415, 1, 54, 'x', 10152);
+cache_sim.command('w', 416, 2, 54, 'x', 10153);
+cache_sim.command('r', 416, 1, 54, 'x', 10154);
+cache_sim.command('r', 419, 2, 54, 'x', 10304);
+cache_sim.command('r', 416, 2, 54, 'x', 10305);
+cache_sim.command('w', 412, 2, 54, 'x', 10306);
+cache_sim.command('w', 415, 1, 54, 'x', 10456);
 
-%% Test Case 3
+%% Test Case 3: Random write (L2 miss)
 
+cache_sim.command('w', 428, 2, 54, 'x', 10000);
+cache_sim.command('w', 429, 3, 54, 'x', 10001);
+cache_sim.command('r', 428, 3, 54, 'x', 10002);
+cache_sim.command('r', 428, 2, 54, 'x', 10152);
+cache_sim.command('w', 427, 2, 54, 'x', 10153);
+cache_sim.command('r', 424, 2, 54, 'x', 10154);
+cache_sim.command('r', 427, 3, 54, 'x', 10304);
+cache_sim.command('r', 431, 3, 54, 'x', 10305);
+cache_sim.command('w', 426, 3, 54, 'x', 10306);
+cache_sim.command('r', 428, 3, 54, 'x', 10456);
+cache_sim.command('r', 428, 2, 54, 'x', 10457);
+cache_sim.command('w', 427, 3, 54, 'x', 10458);
+cache_sim.command('r', 429, 3, 54, 'x', 10608);
+cache_sim.command('w', 428, 3, 54, 'x', 10609);
+cache_sim.command('w', 428, 3, 54, 'x', 10610);
