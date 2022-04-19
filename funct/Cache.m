@@ -101,6 +101,35 @@ classdef (ConstructOnLoad = true) Cache
             obj.Valid(set_index,index) = true;
             obj.Dirty(set_index,index) = true;
         end
+
+        % Write Method: Write Through & Non- Write Allocate
+        function result = write_through_nonallocate(obj,tag,set_index)
+            % write_through_nonallocate Write function implementing the Write
+            % Through and Non- Write Allocate policies
+            %
+            % Inputs:
+            %       - tag: Tag number of input data
+            %       - set_index: Cache Set Index
+            % Outputs:
+            %       - result: Integer representing result
+            %                 0 == MISS; 1 == HIT
+            tags = obj.Tag(set_index,:);
+            index = find(tags == tag);
+            hit = size(index,2);
+            if hit == 0
+                disp("MISS")
+                % do nothing - for a non-allocate policy, only the main
+                % memory is updated in the event of a miss
+                result = 0;
+            else
+                disp("HIT")
+                % Replace data held in block (Mark as Valid and change Tag)
+                obj.Tag(set_index,index) = tag;
+                result = 1;
+            end
+
+
+        end
     end
 end
 
