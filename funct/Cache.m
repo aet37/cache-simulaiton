@@ -1,4 +1,4 @@
-classdef (ConstructOnLoad = true) Cache
+classdef (ConstructOnLoad = true) Cache < handle
     %CACHE Object containing a customizable level of cache
     
     properties
@@ -55,7 +55,7 @@ classdef (ConstructOnLoad = true) Cache
         % Function to perform the read function
         function res = read(obj, tag, set_index)
             %read Function to perform the proper read
-
+            res = 0;
             
         end
         
