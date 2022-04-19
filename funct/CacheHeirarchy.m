@@ -45,12 +45,12 @@ classdef CacheHeirarchy
                 dispy('Warning: Offset not used ... ')
             end
 
-            if op == 'r'
+            if op == 'w'
                 for ii = 1:obj.numCache
                     if ii == 1  % For l1 cache
-                        res = obj.cacheVector(ii).read(bin2dec([dec2bin(tag) dec2bin(l2_l1)]), l1);
+                        res = obj.cacheVector(ii).write(bin2dec([dec2bin(tag) dec2bin(l2_l1)]), l1);
                     elseif ii == 2  % For l2 cache
-                        res = obj.cacheVector(ii).read(tag, bin2dec([dec2bin(l2_l1) dec2bin(l1)]));
+                        res = obj.cacheVector(ii).write(tag, bin2dec([dec2bin(l2_l1) dec2bin(l1)]));
                     else
                         break;
                     end
@@ -67,7 +67,7 @@ classdef CacheHeirarchy
                         break;
                     end
                 end
-            elseif op == 'w'
+            elseif op == 'r'
 
             else
                 error('Invalid Cache write command');

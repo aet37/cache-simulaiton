@@ -7,11 +7,10 @@ classdef (ConstructOnLoad = true) Cache
         BlockSize
         SetAssociativity
         Policy
-        readFcn
+        writeFcn
         
         Valid
         Tag
-        Data
         Dirty
         LRU
     end
@@ -33,12 +32,11 @@ classdef (ConstructOnLoad = true) Cache
             obj.Policy = Policy;
 
             if Policy == "write-back+write-allocate"
-                obj.readFcn = @write_back_allocate;
+                obj.writeFcn = @write_back_allocate;
             else
-                obj.readFcn = @write_through_nonallocate;
+                obj.writeFcn = @write_through_nonallocate;
             end
 
-            obj.Data = zeros([LayerSize/BlockSize BlockSize/SetAssociativity SetAssociativity]);
             obj.Valid = false([LayerSize/BlockSize SetAssociativity]);
             obj.Tag = zeros([LayerSize/BlockSize SetAssociativity]);
             obj.Dirty = false([LayerSize/BlockSize SetAssociativity]);
@@ -46,12 +44,19 @@ classdef (ConstructOnLoad = true) Cache
             
         end
         
-        % Function to perform the proper read/write as defined from readFcn
+        % Function to perform the proper write as defined from readFcn
         % var
-        function res = read(obj, tag, set_index)
+        function res = write(obj, tag, set_index)
             %read Function to perform the proper read/write as defined from
             %readFcn
-            res = obj.readFcn(obj, tag, set_index);
+            res = obj.writeFcn(obj, tag, set_index);
+        end
+
+        % Function to perform the read function
+        function res = read(obj, tag, set_index)
+            %read Function to perform the proper read
+
+            
         end
         
         % Write Method: Write Back & Write Allocate
