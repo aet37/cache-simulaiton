@@ -7,6 +7,7 @@ classdef (ConstructOnLoad = true) Cache
         BlockSize
         SetAssociativity
         Policy
+        readFcn
         
         Valid
         Tag
@@ -30,6 +31,13 @@ classdef (ConstructOnLoad = true) Cache
             obj.BlockSize = BlockSize;
             obj.SetAssociativity = SetAssociativity;
             obj.Policy = Policy;
+
+            if Policy == "write-back+write-allocate"
+                obj.readFcn = @write_back_allocate;
+            else
+                obj.readFcn = @write_through_nonallocate;
+            end
+
             obj.Data = zeros([LayerSize/BlockSize BlockSize/SetAssociativity SetAssociativity]);
             obj.Valid = false([LayerSize/BlockSize SetAssociativity]);
             obj.Tag = zeros([LayerSize/BlockSize SetAssociativity]);
@@ -38,11 +46,12 @@ classdef (ConstructOnLoad = true) Cache
             
         end
         
-        % Example Method
-        function outputArg = method1(obj,inputArg)
-            %METHOD1 Summary of this method goes here
-            %   Detailed explanation goes here
-            outputArg = obj.Property1 + inputArg;
+        % Function to perform the proper read/write as defined from readFcn
+        % var
+        function res = read(obj, tag, set_index)
+            %read Function to perform the proper read/write as defined from
+            %readFcn
+            res = obj.readFcn(obj, tag, set_index);
         end
         
         % Write Method: Write Back & Write Allocate
