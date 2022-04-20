@@ -11,6 +11,7 @@ classdef CacheHeirarchy < handle
         numCache
 
         currentCycle
+        Set_Indices
     end
     
     methods
@@ -51,15 +52,21 @@ classdef CacheHeirarchy < handle
             if offset ~= 'x'
                 dispy('Warning: Offset not used ... ')
             end
+            
+            % Assign Indices
+            L1_index = l1;
+            L2_index = bin2dec([dec2bin(l2_l1) dec2bin(l1)]);
+            L3_index = bin2dec([dec2bin(l3_l2) dec2bin(l2_l1) dec2bin(l1)]);
+            obj.Set_Indices = [L1_index L2_index L3_index];
 
             if op == 'w'
                 for ii = 1:obj.numCache
                     if ii == 1  % For l1 cache
-                        res = obj.cacheVector(ii).write(bin2dec([dec2bin(tag) dec2bin(l2_l1)]), l1);
+                        [res,evict_flag,evicted_tag] = obj.cacheVector(ii).write(bin2dec([dec2bin(tag) dec2bin(l2_l1)]), L1_index);
                     elseif ii == 2  % For l2 cache
-                        res = obj.cacheVector(ii).write(tag, bin2dec([dec2bin(l2_l1) dec2bin(l1)]));
+                        [res,evict_flag,evicted_tag] = obj.cacheVector(ii).write(tag, L2_index);
                     elseif ii == 3  % For l3 cache
-                        res = obj.cacheVector(ii).write(tag, bin2dec([dec2bin(l3_l2) dec2bin(l2_l1) dec2bin(l1)]));
+                        [res,evict_flag,evicted_tag] = obj.cacheVector(ii).write(tag, L3_index);
                     else
                         print('Warning: Not configured for over L3 (reusults may be innacurate) ...')
                         break;
@@ -72,19 +79,26 @@ classdef CacheHeirarchy < handle
                         obj.currentCycle = obj.currentCycle + obj.cacheVector(ii).AccessLatency;
                     end
                     
+                    % Check if an eviction needs to take place
+                    if evict_flag
+                        % Assuming we can only evict to L2 or MM
+                        eviction_cycles = obj.evict(ii+1,evicted_tag);
+                        obj.currentCycle = obj.currentCycle + eviction_cycles;
+                    end
+                    
                     % If there is hit, break out of loop
-                    if res
+                    if res && obj.cacheVector(ii).policy == "write-back+write-allocate"
                         break;
                     end
                 end
             elseif op == 'r'
                 for ii = 1:obj.numCache
                     if ii == 1  % For l1 cache
-                        res = obj.cacheVector(ii).read(bin2dec([dec2bin(tag) dec2bin(l2_l1)]), l1);
+                        [res,evict_flag,evicted_tag] = obj.cacheVector(ii).read(bin2dec([dec2bin(tag) dec2bin(l2_l1)]), l1);
                     elseif ii == 2  % For l2 cache
-                        res = obj.cacheVector(ii).read(tag, bin2dec([dec2bin(l2_l1) dec2bin(l1)]));
+                        [res,evict_flag,evicted_tag] = obj.cacheVector(ii).read(tag, bin2dec([dec2bin(l2_l1) dec2bin(l1)]));
                     elseif ii == 3  % For l3 cache
-                        res = obj.cacheVector(ii).read(tag, bin2dec([dec2bin(l3_l2) dec2bin(l2_l1) dec2bin(l1)]));
+                        [res,evict_flag,evicted_tag] = obj.cacheVector(ii).read(tag, bin2dec([dec2bin(l3_l2) dec2bin(l2_l1) dec2bin(l1)]));
                     else
                         print('Warning: Not configured for over L3 (reusults may be innacurate) ...')
                         break;
@@ -95,6 +109,13 @@ classdef CacheHeirarchy < handle
                         obj.currentCycle = arrival_time + obj.cacheVector(ii).AccessLatency;
                     else
                         obj.currentCycle = obj.currentCycle + obj.cacheVector(ii).AccessLatency;
+                    end
+                    
+                    % Check if an eviction needs to take place
+                    if evict_flag
+                        % Assuming we can only evict to L2 or MM
+                        eviction_cycles = obj.evict(ii+1,evicted_tag);
+                        obj.currentCycle = obj.currentCycle + eviction_cycles;
                     end
                     
                     % If there is hit, break out of loop
@@ -104,6 +125,35 @@ classdef CacheHeirarchy < handle
                 end
             else
                 error('Invalid Cache access command');
+            end
+        end
+        
+        function [cycle_time] = evict(cache_index,tag)
+            %evict Enact evictions for cache layers
+            %
+            % Inputs:
+            %       cache_index - index of cache that data is being evicted to
+            %       set_index   - index of set that data is being evicted to
+            %       tag         - tag address value that is being evicted
+            %
+            % Outputs:
+            %       cycle_time - total cycle time passed from evictions
+            %
+            cycle_time = 0;
+            [~,evict_flag,evicted_tag] = obj.write(tag,obj.Set_Indices(cache_index));
+            % Call for write
+            if evict_flag && cache_index <= obj.numCache
+                % If another function is needed, evict necessary block
+                cycle_time = obj.evict(cache_index+1,evicted_tag);
+            else
+                if cache_index <= obj.numCache
+                    % Evicting to L2 or L3
+                    cycle_time = cycle_time + obj.cacheVector(cache_index).AccessLatency;
+                else
+                    % Evicting to main memory
+                    cycle_time = cycle_time + 100;
+                end
+                
             end
         end
     end
