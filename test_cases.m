@@ -14,6 +14,8 @@ cache_sim = CacheHeirarchy(2, setup_params);
 
 %% Warmup
 
+disp("-- Warmup --")
+
 cache_sim.command('r', 408, 1, 54, 'x', 1);
 cache_sim.command('r', 409, 1, 54, 'x', 2);
 cache_sim.command('r', 410, 1, 54, 'x', 3);
@@ -49,6 +51,8 @@ cache_sim.command('r', 423, 2, 54, 'x', 32);
 
 %% Test Case 1: Random Read
 
+disp("-- Test Case 1 --")
+
 cache_sim.command('r', 423, 2, 54, 'x', 10000);
 cache_sim.command('r', 417, 2, 54, 'x', 10001);
 cache_sim.command('r', 417, 2, 54, 'x', 10002);
@@ -72,6 +76,8 @@ cache_sim.command('r', 428, 2, 54, 'x', 10913);
 
 %% Test Case 2: Random Read/Write
 
+disp("-- Test Case 2 --")
+
 cache_sim.command('w', 420, 2, 54, 'x', 10000);
 cache_sim.command('r', 412, 2, 54, 'x', 10001);
 cache_sim.command('w', 417, 1, 54, 'x', 10002);
@@ -84,6 +90,8 @@ cache_sim.command('w', 412, 2, 54, 'x', 10306);
 cache_sim.command('w', 415, 1, 54, 'x', 10456);
 
 %% Test Case 3: Random write (L2 miss)
+
+disp("-- Test Case 3 --")
 
 cache_sim.command('w', 428, 2, 54, 'x', 10000);
 cache_sim.command('w', 429, 3, 54, 'x', 10001);

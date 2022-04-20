@@ -74,6 +74,7 @@ classdef (ConstructOnLoad = true) Cache < handle
             % if it is:
             if hit == 0
                 % MISS
+                disp("MISS")
                 % Determine if an eviction needs to take place
                 % Find LRU block
                 LRU_index = find(obj.LRU(set_index,:) == obj.SetAssociativity);
@@ -88,12 +89,13 @@ classdef (ConstructOnLoad = true) Cache < handle
                 res = 0;
             else
                 % HIT
+                disp("HIT")
                 res = 1;
             end
             % Update LRU
             update_LRU = find(obj.LRU(set_index,:) ~= obj.SetAssociativity);
             obj.LRU(set_index,update_LRU) = obj.LRU(update_LRU) + 1;
-            obj.LRU(set_index,index) = 1;
+            obj.LRU(set_index,LRU_index(1)) = 1;
         end
         
         % Write Method: Write Back & Write Allocate
