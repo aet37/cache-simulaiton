@@ -62,43 +62,59 @@ classdef CacheHeirarchy < handle
             if op == 'w'
                 for ii = 1:obj.numCache
                     if ii == 1  % For l1 cache
-                        [res,evict_flag,evicted_tag] = obj.cacheVector(ii).write(bin2dec([dec2bin(tag) dec2bin(l2_l1)]), L1_index);
+                        [res, evict_flag, evicted_tag, to_display] = obj.cacheVector(ii).write(bin2dec([dec2bin(tag) dec2bin(l2_l1)]), L1_index);
                     elseif ii == 2  % For l2 cache
-                        [res,evict_flag,evicted_tag] = obj.cacheVector(ii).write(tag, L2_index);
+                        [res, evict_flag, evicted_tag, to_display] = obj.cacheVector(ii).write(tag, L2_index);
                     elseif ii == 3  % For l3 cache
-                        [res,evict_flag,evicted_tag] = obj.cacheVector(ii).write(tag, L3_index);
+                        [res, evict_flag, evicted_tag, to_display] = obj.cacheVector(ii).write(tag, L3_index);
                     else
                         print('Warning: Not configured for over L3 (reusults may be innacurate) ...')
                         break;
                     end
     
                     % Add cycle time
+                    start_op = obj.currentCycle;
                     if arrival_time > obj.currentCycle
                         obj.currentCycle = arrival_time + obj.cacheVector(ii).AccessLatency;
                     else
                         obj.currentCycle = obj.currentCycle + obj.cacheVector(ii).AccessLatency;
                     end
-                    
+                    end_op = obj.currentCycle;
+
+                    to_display = ['(w) S: ', num2str(start_op), ', R: ', num2str(end_op), '; L', num2str(ii), ' ', to_display];
+                    disp(to_display)
+
                     % Check if an eviction needs to take place
                     if evict_flag
+                        to_disp_evict = ['  Eviction Occured at Tag: ', num2str(tag)];
+
                         % Assuming we can only evict to L2 or MM
-                        eviction_cycles = obj.evict(ii+1,evicted_tag);
+                        if ~(ii + 1 > obj.numCache)
+                            eviction_cycles = obj.evict(ii+1,evicted_tag);
+                        else
+                            eviction_cycles = 100;
+                        end
+                        
+                        start_e = obj.currentCycle;
                         obj.currentCycle = obj.currentCycle + eviction_cycles;
+                        end_e = obj.currentCycle;
+                        to_disp_evict = [to_disp_evict, 'S: ', num2str(start_e), ', R: ', num2str(end_e)];
+                        disp(to_disp_evict)
                     end
                     
                     % If there is hit, break out of loop
-                    if res && obj.cacheVector(ii).policy == "write-back+write-allocate"
+                    if res && obj.cacheVector(ii).Policy == "write-back+write-allocate"
                         break;
                     end
                 end
             elseif op == 'r'
                 for ii = 1:obj.numCache
                     if ii == 1  % For l1 cache
-                        [res,evict_flag,evicted_tag] = obj.cacheVector(ii).read(bin2dec([dec2bin(tag) dec2bin(l2_l1)]), l1);
+                        [res, evict_flag, evicted_tag, to_display] = obj.cacheVector(ii).read(bin2dec([dec2bin(tag) dec2bin(l2_l1)]), l1);
                     elseif ii == 2  % For l2 cache
-                        [res,evict_flag,evicted_tag] = obj.cacheVector(ii).read(tag, bin2dec([dec2bin(l2_l1) dec2bin(l1)]));
+                        [res, evict_flag, evicted_tag, to_display] = obj.cacheVector(ii).read(tag, bin2dec([dec2bin(l2_l1) dec2bin(l1)]));
                     elseif ii == 3  % For l3 cache
-                        [res,evict_flag,evicted_tag] = obj.cacheVector(ii).read(tag, bin2dec([dec2bin(l3_l2) dec2bin(l2_l1) dec2bin(l1)]));
+                        [res, evict_flag, evicted_tag, to_display] = obj.cacheVector(ii).read(tag, bin2dec([dec2bin(l3_l2) dec2bin(l2_l1) dec2bin(l1)]));
                     else
                         print('Warning: Not configured for over L3 (reusults may be innacurate) ...')
                         break;
@@ -106,20 +122,32 @@ classdef CacheHeirarchy < handle
     
                     % Add cycle time
                     if arrival_time > obj.currentCycle
+                        start_op = arrival_time;
                         obj.currentCycle = arrival_time + obj.cacheVector(ii).AccessLatency;
                     else
+                        start_op = obj.currentCycle;
                         obj.currentCycle = obj.currentCycle + obj.cacheVector(ii).AccessLatency;
                     end
-                    
+                    end_op = obj.currentCycle;
+
+                    to_display = ['(r) S: ', num2str(start_op), ', R: ', num2str(end_op), '; L', num2str(ii), ' ', to_display];
+                    disp(to_display)
+
                     % Check if an eviction needs to take place
                     if evict_flag
-                        disp('Eviction Occurred')
-                        disp(tag)
+                        to_disp_evict = ['  Eviction Occured at Tag: ', num2str(tag), '; '];
                         % Assuming we can only evict to L2 or MM
-                        eviction_cycles = obj.evict(ii+1,evicted_tag);
+                        if ~(ii + 1 > obj.numCache)
+                            eviction_cycles = obj.evict(ii+1, evicted_tag);
+                        end
+
+                        start_e = obj.currentCycle;
                         obj.currentCycle = obj.currentCycle + eviction_cycles;
+                        end_e = obj.currentCycle;
+                        to_disp_evict = [to_disp_evict, 'S: ', num2str(start_e), ', R: ', num2str(end_e)];
+                        disp(to_disp_evict)
                     end
-                    
+
                     % If there is hit, break out of loop
                     if res
                         break;
@@ -128,9 +156,10 @@ classdef CacheHeirarchy < handle
             else
                 error('Invalid Cache access command');
             end
+            disp(' ')
         end
         
-        function [cycle_time] = evict(obj,cache_index,tag)
+        function [cycle_time] = evict(obj, cache_index,tag)
             %evict Enact evictions for cache layers
             %
             % Inputs:
@@ -145,11 +174,11 @@ classdef CacheHeirarchy < handle
             if cache_index > obj.numCache
                 cycle_time = cycle_time + 100;
             else
-                [~,evict_flag,evicted_tag] = obj.cacheVector(cache_index).write(tag,obj.Set_Indices(cache_index));
+                [~, evict_flag, evicted_tag, ~] = obj.cacheVector(cache_index).write(tag, obj.Set_Indices(cache_index));
                 % Call for write
                 if evict_flag && cache_index <= obj.numCache
                     % If another function is needed, evict necessary block
-                    cycle_time = obj.evict(cache_index+1,evicted_tag);
+                    cycle_time = obj.evict(cache_index + 1, evicted_tag);
                 else
                     if cache_index <= obj.numCache
                         % Evicting to L2 or L3
