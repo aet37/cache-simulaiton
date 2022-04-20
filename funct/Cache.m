@@ -46,21 +46,62 @@ classdef (ConstructOnLoad = true) Cache < handle
         
         % Function to perform the proper write as defined from readFcn
         % var
-        function res = write(obj, tag, set_index)
+        function [res,evict,evicted_tag] = write(obj, tag, set_index)
             %read Function to perform the proper read/write as defined from
             %readFcn
-            res = obj.writeFcn(obj, tag, set_index);
+            [res,evict,evicted_tag] = obj.writeFcn(obj, tag, set_index);
         end
 
         % Function to perform the read function
-        function res = read(obj, tag, set_index)
+        function [res,evict,evicted_tag] = read(obj, tag, set_index)
             %read Function to perform the proper read
-            res = 0;
+            %
+            % Inputs:
+            %       - tag: Tag number of input data
+            %       - set_index: Cache Set Index
+            % Outputs:
+            %       - result: Integer representing result
+            %                 0 == MISS; 1 == HIT
             
+            % Initialize eviction parameters
+            evict = 0;
+            evicted_tag = 0;
+            
+            % Check if tag is in set
+            tags = obj.Tag(set_index,:);
+            index = find(tags == tag);
+            hit = size(index,2);
+            % if it is:
+            if hit == 0
+                % MISS
+                % Determine if an eviction needs to take place
+                % Find LRU block
+                LRU_index = find(obj.LRU(set_index,:) == obj.SetAssociativity);
+                % Check for eviction
+                if obj.Valid(set_index, LRU_index(1)) == true
+                    % Follow eviction process
+                    evict = 1;
+                    evicted_tag = obj.Tag(set_index,LRU_index(1));
+                end
+                % After possible eviction, write tag into set
+                obj.Tag(set_index,LRU_index(1)) = tag;
+                index = LRU_index(1);
+                res = 0;
+            else
+                % HIT
+                res = 1;
+            end
+            % Update LRU
+            update_LRU = find(obj.LRU(set_index,:) ~= obj.SetAssociativity);
+            obj.LRU(set_index,update_LRU) = obj.LRU(set_index,update_LRU) + 1;
+            obj.LRU(set_index,LRU_index(1)) = 1;
+            
+            % Mark block block as valid
+            obj.Valid(set_index,index) = 1;
         end
         
         % Write Method: Write Back & Write Allocate
-        function result = write_back_allocate(obj,tag,set_index)
+        function [result,evict,evicted_tag] = write_back_allocate(obj,tag,set_index)
             % write_back_allocate Write function implementing the Write
             % Back and Write Allocate policies
             %
@@ -70,12 +111,17 @@ classdef (ConstructOnLoad = true) Cache < handle
             % Outputs:
             %       - result: Integer representing result
             %                 0 == MISS; 1 == HIT
-            %       - cycles: Amount of cycles passed during operation
-            %           Should this be returned from this function?
+            %       - evict: Flag indicating whether or not an eviction
+            %                needs to take place:
+            %                0 == NO EVICTION; 1 = EVICTION
+            %       - evicted_tag: Address being evicted into a lower cache
+            
+            % Initialize eviction parameters
+            evict = 0;
+            evicted_tag = 0;
             
             % Determine if a hit takes place
             % Get all tags in set and compare to input tag
-            disp('Func Called')
             tags = obj.Tag(set_index,:);
             index = find(tags == tag);
             hit = size(index,2);
@@ -84,19 +130,20 @@ classdef (ConstructOnLoad = true) Cache < handle
                 % MISS Condition
                 % Find LRU block index
                 LRU_index = find(obj.LRU(set_index,:) == obj.SetAssociativity);
-                sprintf('LRU_index = %d',LRU_index(1))
-                sprintf('tag = %d',tag)
+                disp(obj.LRU(set_index,:))
+                %sprintf('LRU_index = %d',LRU_index(1))
+                %sprintf('tag = %d',tag)
                 % Check if block is dirty
                 if obj.Dirty(set_index, LRU_index(1)) == true
-                    disp('Block is Dirty)')
                     % Write tag to lower level
-                    % Should this be done in loop of cache hierarchy
-                    % after a miss is returned?
+                    disp('Block is Dirty)')
+                    evict = 1;
+                    evicted_tag = obj.Tag(set_index, LRU_index(1));
                 end
-                % Write to LRU block
-                sprintf('Tag Before = %d',obj.Tag(set_index,LRU_index(1)))
+                % Write Allocation says to load data from main memory into the cache
+                % Update the LRU block
                 obj.Tag(set_index,LRU_index(1)) = tag;
-                sprintf('Tag After = %d',obj.Tag(set_index,LRU_index(1)))
+                index = LRU_index(1);
                 % Set Result = MISS
                 result = 0;
             else
@@ -109,15 +156,18 @@ classdef (ConstructOnLoad = true) Cache < handle
             end
             % Update LRU
             update_LRU = find(obj.LRU(set_index,:) ~= obj.SetAssociativity);
-            obj.LRU(set_index,update_LRU) = obj.LRU(update_LRU) + 1;
-            obj.LRU(set_index,index) = 1;
+            sprintf('SetAssociativity = %d',obj.SetAssociativity)
+            disp(update_LRU)
+            obj.LRU(set_index,update_LRU) = obj.LRU(set_index,update_LRU) + 1;
+            obj.LRU(set_index,LRU_index(1)) = 1;
+            disp(obj.LRU(set_index,:))
             % Regardless of result, update valid and dirty
             obj.Valid(set_index,index) = true;
             obj.Dirty(set_index,index) = true;
         end
 
         % Write Method: Write Through & Non- Write Allocate
-        function result = write_through_nonallocate(obj,tag,set_index)
+        function [result,evict,evicted_tag] = write_through_nonallocate(obj,tag,set_index)
             % write_through_nonallocate Write function implementing the Write
             % Through and Non- Write Allocate policies
             %
@@ -127,6 +177,12 @@ classdef (ConstructOnLoad = true) Cache < handle
             % Outputs:
             %       - result: Integer representing result
             %                 0 == MISS; 1 == HIT
+            
+            disp('Write Func Called')
+            % Initialize eviction parameters
+            evict = 0;
+            evicted_tag = 0;
+            
             tags = obj.Tag(set_index,:);
             index = find(tags == tag);
             hit = size(index,2);
@@ -141,8 +197,11 @@ classdef (ConstructOnLoad = true) Cache < handle
                 obj.Tag(set_index,index) = tag;
                 result = 1;
             end
-
-
+            
+            % Update LRU
+            update_LRU = find(obj.LRU(set_index,:) ~= obj.SetAssociativity);
+            obj.LRU(set_index,update_LRU) = obj.LRU(update_LRU) + 1;
+            obj.LRU(set_index,index) = 1;
         end
     end
 end
