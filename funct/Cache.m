@@ -46,10 +46,10 @@ classdef (ConstructOnLoad = true) Cache < handle
         
         % Function to perform the proper write as defined from readFcn
         % var
-        function res = write(obj, tag, set_index)
+        function [res,evict,evicted_tag] = write(obj, tag, set_index)
             %read Function to perform the proper read/write as defined from
             %readFcn
-            res = obj.writeFcn(obj, tag, set_index);
+            [res,evict,evicted_tag] = obj.writeFcn(obj, tag, set_index);
         end
 
         % Function to perform the read function
@@ -66,7 +66,7 @@ classdef (ConstructOnLoad = true) Cache < handle
             % Initialize eviction parameters
             evict = 0;
             evicted_tag = 0;
-            disp(tag)
+            
             % Check if tag is in set
             tags = obj.Tag(set_index,:);
             index = find(tags == tag);
@@ -85,6 +85,7 @@ classdef (ConstructOnLoad = true) Cache < handle
                 end
                 % After possible eviction, write tag into set
                 obj.Tag(set_index,LRU_index(1)) = tag;
+                index = LRU_index(1);
                 res = 0;
             else
                 % HIT
@@ -92,8 +93,11 @@ classdef (ConstructOnLoad = true) Cache < handle
             end
             % Update LRU
             update_LRU = find(obj.LRU(set_index,:) ~= obj.SetAssociativity);
-            obj.LRU(set_index,update_LRU) = obj.LRU(update_LRU) + 1;
-            obj.LRU(set_index,index) = 1;
+            obj.LRU(set_index,update_LRU) = obj.LRU(set_index,update_LRU) + 1;
+            obj.LRU(set_index,LRU_index(1)) = 1;
+            
+            % Mark block block as valid
+            obj.Valid(set_index,index) = 1;
         end
         
         % Write Method: Write Back & Write Allocate
@@ -126,8 +130,9 @@ classdef (ConstructOnLoad = true) Cache < handle
                 % MISS Condition
                 % Find LRU block index
                 LRU_index = find(obj.LRU(set_index,:) == obj.SetAssociativity);
-                sprintf('LRU_index = %d',LRU_index(1))
-                sprintf('tag = %d',tag)
+                disp(obj.LRU(set_index,:))
+                %sprintf('LRU_index = %d',LRU_index(1))
+                %sprintf('tag = %d',tag)
                 % Check if block is dirty
                 if obj.Dirty(set_index, LRU_index(1)) == true
                     % Write tag to lower level
@@ -138,6 +143,7 @@ classdef (ConstructOnLoad = true) Cache < handle
                 % Write Allocation says to load data from main memory into the cache
                 % Update the LRU block
                 obj.Tag(set_index,LRU_index(1)) = tag;
+                index = LRU_index(1);
                 % Set Result = MISS
                 result = 0;
             else
@@ -150,8 +156,11 @@ classdef (ConstructOnLoad = true) Cache < handle
             end
             % Update LRU
             update_LRU = find(obj.LRU(set_index,:) ~= obj.SetAssociativity);
-            obj.LRU(set_index,update_LRU) = obj.LRU(update_LRU) + 1;
-            obj.LRU(set_index,index) = 1;
+            sprintf('SetAssociativity = %d',obj.SetAssociativity)
+            disp(update_LRU)
+            obj.LRU(set_index,update_LRU) = obj.LRU(set_index,update_LRU) + 1;
+            obj.LRU(set_index,LRU_index(1)) = 1;
+            disp(obj.LRU(set_index,:))
             % Regardless of result, update valid and dirty
             obj.Valid(set_index,index) = true;
             obj.Dirty(set_index,index) = true;
@@ -187,8 +196,6 @@ classdef (ConstructOnLoad = true) Cache < handle
                 obj.Tag(set_index,index) = tag;
                 result = 1;
             end
-
-
         end
     end
 end

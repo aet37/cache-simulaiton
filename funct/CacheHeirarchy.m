@@ -113,6 +113,8 @@ classdef CacheHeirarchy < handle
                     
                     % Check if an eviction needs to take place
                     if evict_flag
+                        disp('Eviction Occurred')
+                        disp(tag)
                         % Assuming we can only evict to L2 or MM
                         eviction_cycles = obj.evict(ii+1,evicted_tag);
                         obj.currentCycle = obj.currentCycle + eviction_cycles;
@@ -128,7 +130,7 @@ classdef CacheHeirarchy < handle
             end
         end
         
-        function [cycle_time] = evict(cache_index,tag)
+        function [cycle_time] = evict(obj,cache_index,tag)
             %evict Enact evictions for cache layers
             %
             % Inputs:
@@ -140,20 +142,24 @@ classdef CacheHeirarchy < handle
             %       cycle_time - total cycle time passed from evictions
             %
             cycle_time = 0;
-            [~,evict_flag,evicted_tag] = obj.write(tag,obj.Set_Indices(cache_index));
-            % Call for write
-            if evict_flag && cache_index <= obj.numCache
-                % If another function is needed, evict necessary block
-                cycle_time = obj.evict(cache_index+1,evicted_tag);
+            if cache_index > obj.numCache
+                cycle_time = cycle_time + 100;
             else
-                if cache_index <= obj.numCache
-                    % Evicting to L2 or L3
-                    cycle_time = cycle_time + obj.cacheVector(cache_index).AccessLatency;
+                [~,evict_flag,evicted_tag] = obj.cacheVector(cache_index).write(tag,obj.Set_Indices(cache_index));
+                % Call for write
+                if evict_flag && cache_index <= obj.numCache
+                    % If another function is needed, evict necessary block
+                    cycle_time = obj.evict(cache_index+1,evicted_tag);
                 else
-                    % Evicting to main memory
-                    cycle_time = cycle_time + 100;
+                    if cache_index <= obj.numCache
+                        % Evicting to L2 or L3
+                        cycle_time = cycle_time + obj.cacheVector(cache_index).AccessLatency;
+                    else
+                        % Evicting to main memory
+                        cycle_time = cycle_time + 100;
+                    end
+
                 end
-                
             end
         end
     end
