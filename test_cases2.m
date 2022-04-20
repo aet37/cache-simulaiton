@@ -48,6 +48,13 @@ cache_sim.command('r', 421, 2, 54, 'x', 30, 'l3_l2', 5);
 cache_sim.command('r', 422, 2, 54, 'x', 31, 'l3_l2', 5);
 cache_sim.command('r', 423, 2, 54, 'x', 32, 'l3_l2', 5);
 
+disp('--------------------------------------------------')
+for ii = 1:cache_sim.numCache
+    disp(['L', num2str(ii), ' Hit Rate: ', num2str(cache_sim.cacheVector(ii).HitRate * 100), '%'])
+    disp(['L', num2str(ii), ' Miss Rate: ', num2str(cache_sim.cacheVector(ii).MissRate * 100), '%'])
+    disp(' ')
+end
+
 %% Test case: L3 Cache, Random Read/Write
 
 cache_sim.command('w', 420, 2, 54, 'x', 10000, 'l3_l2', 5);
@@ -60,3 +67,10 @@ cache_sim.command('r', 419, 2, 54, 'x', 10304, 'l3_l2', 5);
 cache_sim.command('r', 416, 2, 54, 'x', 10305, 'l3_l2', 5);
 cache_sim.command('w', 412, 2, 54, 'x', 10306, 'l3_l2', 5);
 cache_sim.command('w', 415, 1, 54, 'x', 10456, 'l3_l2', 5);
+
+disp('--------------------------------------------------')
+for ii = 1:cache_sim.numCache
+    disp(['L', num2str(ii), ' Hit Rate: ', num2str(cache_sim.cacheVector(ii).HitRate * 100), '%'])
+    disp(['L', num2str(ii), ' Miss Rate: ', num2str(cache_sim.cacheVector(ii).MissRate * 100), '%'])
+    disp(' ')
+end
