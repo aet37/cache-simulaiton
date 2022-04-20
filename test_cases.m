@@ -5,8 +5,12 @@ close all; clear; clc;
 addpath funct/
 
 % Setup for cache
-setup_params = [32000 1 32 4 "write-back+write-allocate";
-                64000 50 32 8 "write-back+write-allocate"
+% setup_params = [32000 1 32 4 "write-back+write-allocate";
+%                 64000 50 32 8 "write-back+write-allocate"
+%                ];
+
+setup_params = [32000 1 32 4 "write-through+write-nonallocate";
+                64000 50 32 8 "write-through+write-nonallocate"
                ];
 
 % Define cache object
