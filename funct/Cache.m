@@ -91,19 +91,17 @@ classdef (ConstructOnLoad = true) Cache < handle
 
                 % Determine if an eviction needs to take place
                 % Find LRU block
-                LRU_index = find(obj.LRU(set_index,:) == obj.SetAssociativity);
+                LRU_index = find(obj.LRU(set_index, :) == obj.SetAssociativity);
 
                 % Check for eviction
-                if obj.Policy == "write-back+write-allocate"
-                    if obj.Valid(set_index, LRU_index(1)) == true
-                        % Follow eviction process
-                        evict = 1;
-                        evicted_tag = obj.Tag(set_index, LRU_index(1));
-                    end
-                    % After possible eviction, write tag into set
-                    obj.Tag(set_index, LRU_index(1)) = tag;
-                    index = LRU_index(1);
+                if obj.Valid(set_index, LRU_index(1)) == true
+                    % Follow eviction process
+                    evict = 1;
+                    evicted_tag = obj.Tag(set_index, LRU_index(1));
                 end
+                % After possible eviction, write tag into set
+                obj.Tag(set_index, LRU_index(1)) = tag;
+                index = LRU_index(1);
                 res = 0;
             else
                 % HIT
@@ -262,7 +260,7 @@ classdef (ConstructOnLoad = true) Cache < handle
             % Update LRU
             update_LRU = find(obj.LRU(set_index,:) ~= obj.SetAssociativity);
 
-            obj.LRU(set_index,update_LRU) = obj.LRU(update_LRU) + 1;
+            obj.LRU(set_index,update_LRU) = obj.LRU(set_index,update_LRU) + 1;
             obj.LRU(set_index,index) = 1;
             to_display = [to_display, 'LRU (of set) = ', num2str(obj.LRU(set_index, :)), '; '];
 
