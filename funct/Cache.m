@@ -169,6 +169,7 @@ classdef (ConstructOnLoad = true) Cache < handle
             %       - result: Integer representing result
             %                 0 == MISS; 1 == HIT
             
+            disp('Write Func Called')
             % Initialize eviction parameters
             evict = 0;
             evicted_tag = 0;
@@ -187,8 +188,10 @@ classdef (ConstructOnLoad = true) Cache < handle
                 obj.Tag(set_index,index) = tag;
                 result = 1;
             end
-
-
+            % Update LRU
+            update_LRU = find(obj.LRU(set_index,:) ~= obj.SetAssociativity);
+            obj.LRU(set_index,update_LRU) = obj.LRU(update_LRU) + 1;
+            obj.LRU(set_index,index) = 1;
         end
     end
 end
