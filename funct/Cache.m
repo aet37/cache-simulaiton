@@ -47,6 +47,12 @@ classdef (ConstructOnLoad = true) Cache < handle
             obj.Tag = zeros([LayerSize/BlockSize SetAssociativity]);
             obj.Dirty = false([LayerSize/BlockSize SetAssociativity]);
             obj.LRU = ones([LayerSize/BlockSize SetAssociativity]) * SetAssociativity;
+
+            obj.HitRate = 0;
+            obj.MissRate = 0;
+            obj.TotalHit = 0;
+            obj.TotalMiss = 0;
+            obj.TotalInd = 0;
             
         end
         
@@ -86,15 +92,18 @@ classdef (ConstructOnLoad = true) Cache < handle
                 % Determine if an eviction needs to take place
                 % Find LRU block
                 LRU_index = find(obj.LRU(set_index,:) == obj.SetAssociativity);
+
                 % Check for eviction
-                if obj.Valid(set_index, LRU_index(1)) == true
-                    % Follow eviction process
-                    evict = 1;
-                    evicted_tag = obj.Tag(set_index, LRU_index(1));
+                if obj.Policy == "write-back+write-allocate"
+                    if obj.Valid(set_index, LRU_index(1)) == true
+                        % Follow eviction process
+                        evict = 1;
+                        evicted_tag = obj.Tag(set_index, LRU_index(1));
+                    end
+                    % After possible eviction, write tag into set
+                    obj.Tag(set_index, LRU_index(1)) = tag;
+                    index = LRU_index(1);
                 end
-                % After possible eviction, write tag into set
-                obj.Tag(set_index, LRU_index(1)) = tag;
-                index = LRU_index(1);
                 res = 0;
             else
                 % HIT
@@ -106,10 +115,10 @@ classdef (ConstructOnLoad = true) Cache < handle
             end
             % Update LRU
             update_LRU = find(obj.LRU(set_index,:) ~= obj.SetAssociativity);
-            to_display = [to_display, 'LRU = ', num2str(update_LRU), '; '];
 
             obj.LRU(set_index, update_LRU) = obj.LRU(set_index, update_LRU) + 1;
             obj.LRU(set_index, LRU_index(1)) = 1;
+            to_display = [to_display, 'LRU (of set) = ', num2str(obj.LRU(set_index, :)), '; '];
             
             % Mark block block as valid
             obj.Valid(set_index,index) = 1;
@@ -193,10 +202,10 @@ classdef (ConstructOnLoad = true) Cache < handle
             end
             % Update LRU
             update_LRU = find(obj.LRU(set_index,:) ~= obj.SetAssociativity);
-            to_display = [to_display, 'LRU = ', num2str(update_LRU), '; '];
             %disp(update_LRU)
             obj.LRU(set_index,update_LRU) = obj.LRU(set_index,update_LRU) + 1;
             obj.LRU(set_index,LRU_index(1)) = 1;
+            to_display = [to_display, 'LRU (of set) = ', num2str(obj.LRU(set_index, :)), '; '];
             %disp(obj.LRU(set_index,:))
             % Regardless of result, update valid and dirty
             obj.Valid(set_index,index) = true;
@@ -252,10 +261,10 @@ classdef (ConstructOnLoad = true) Cache < handle
             
             % Update LRU
             update_LRU = find(obj.LRU(set_index,:) ~= obj.SetAssociativity);
-            to_display = [to_display, 'LRU = ', num2str(update_LRU), '; '];
 
             obj.LRU(set_index,update_LRU) = obj.LRU(update_LRU) + 1;
             obj.LRU(set_index,index) = 1;
+            to_display = [to_display, 'LRU (of set) = ', num2str(obj.LRU(set_index, :)), '; '];
 
             % Re-evaluate hit and miss rate
             if hit

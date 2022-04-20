@@ -52,11 +52,10 @@ cache_sim.command('r', 421, 2, 54, 'x', 30);
 cache_sim.command('r', 422, 2, 54, 'x', 31);
 cache_sim.command('r', 423, 2, 54, 'x', 32);
 
+disp(' ')
 disp('--------------------------------------------------')
 for ii = 1:cache_sim.numCache
-    disp(['L', num2str(ii), ' Hit Rate: ', num2str(cache_sim.cacheVector(ii).HitRate * 100), '%'])
-    disp(['L', num2str(ii), ' Miss Rate: ', num2str(cache_sim.cacheVector(ii).MissRate * 100), '%'])
-    disp(' ')
+    disp(['L', num2str(ii), ' Hit Rate: ', num2str(cache_sim.cacheVector(ii).HitRate * 100), ])
 end
 
 %% Test Case 1: Random Read
@@ -82,13 +81,6 @@ cache_sim.command('r', 427, 3, 54, 'x', 10762);
 cache_sim.command('r', 430, 3, 54, 'x', 10763);
 cache_sim.command('r', 428, 2, 54, 'x', 10913);
 
-disp('--------------------------------------------------')
-for ii = 1:cache_sim.numCache
-    disp(['L', num2str(ii), ' Hit Rate: ', num2str(cache_sim.cacheVector(ii).HitRate * 100), '%'])
-    disp(['L', num2str(ii), ' Miss Rate: ', num2str(cache_sim.cacheVector(ii).MissRate * 100), '%'])
-    disp(' ')
-end
-
 %% Test Case 2: Random Read/Write
 
 cache_sim.command('w', 420, 2, 54, 'x', 10000);
@@ -101,14 +93,6 @@ cache_sim.command('r', 419, 2, 54, 'x', 10304);
 cache_sim.command('r', 416, 2, 54, 'x', 10305);
 cache_sim.command('w', 412, 2, 54, 'x', 10306);
 cache_sim.command('w', 415, 1, 54, 'x', 10456);
-
-disp(' ')
-disp('--------------------------------------------------')
-for ii = 1:cache_sim.numCache
-    disp(['L', num2str(ii), ' Hit Rate: ', num2str(cache_sim.cacheVector(ii).HitRate * 100), '%'])
-    disp(['L', num2str(ii), ' Miss Rate: ', num2str(cache_sim.cacheVector(ii).MissRate * 100), '%'])
-    disp(' ')
-end
 
 %% Test Case 3: Random write (L2 miss)
 
@@ -127,10 +111,3 @@ cache_sim.command('w', 427, 3, 54, 'x', 10458);
 cache_sim.command('r', 429, 3, 54, 'x', 10608);
 cache_sim.command('w', 428, 3, 54, 'x', 10609);
 cache_sim.command('w', 428, 3, 54, 'x', 10610);
-
-disp('--------------------------------------------------')
-for ii = 1:cache_sim.numCache
-    disp(['L', num2str(ii), ' Hit Rate: ', num2str(cache_sim.cacheVector(ii).HitRate * 100), '%'])
-    disp(['L', num2str(ii), ' Miss Rate: ', num2str(cache_sim.cacheVector(ii).MissRate * 100), '%'])
-    disp(' ')
-end
