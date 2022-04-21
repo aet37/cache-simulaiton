@@ -156,13 +156,14 @@ classdef CacheHeirarchy < handle
                         start_op = obj.currentCycle;
                         obj.currentCycle = obj.currentCycle + obj.cacheVector(ii).AccessLatency;
                     end
-                    end_op = obj.currentCycle;
+                    
                     
                     % Check if MM needs to be accessed
                     if ii == obj.numCache && res == 0
                         % Add access latency for main memory
                         obj.currentCycle = obj.currentCycle + 100;
                     end
+                    end_op = obj.currentCycle;
 
                     to_display = ['(r) S: ', num2str(start_op), ', R: ', num2str(end_op), '; L', num2str(ii), ' ', to_display];
                     disp(to_display)
