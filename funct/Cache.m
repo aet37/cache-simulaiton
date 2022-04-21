@@ -91,31 +91,27 @@ classdef (ConstructOnLoad = true) Cache < handle
 
                 % Determine if an eviction needs to take place
                 % Find LRU block
-                LRU_index = find(obj.LRU(set_index, :) == obj.SetAssociativity);
+                [~,LRU_index] = max(obj.LRU(set_index, :));
 
                 % Check for eviction
-                if obj.Valid(set_index, LRU_index(1)) == true
+                if obj.Valid(set_index, LRU_index) == true && obj.Dirty(set_index,LRU_index) == 1
                     % Follow eviction process
                     evict = 1;
-                    evicted_tag = obj.Tag(set_index, LRU_index(1));
+                    evicted_tag = obj.Tag(set_index, LRU_index);
+                    obj.Dirty(set_index,LRU_index) = 0;
                 end
                 % After possible eviction, write tag into set
-                obj.Tag(set_index, LRU_index(1)) = tag;
-                index = LRU_index(1);
+                obj.Tag(set_index, LRU_index) = tag;
+                index = LRU_index;
                 res = 0;
             else
                 % HIT
                 to_display = [to_display, 'HIT; '];
-
-                LRU_index = find(obj.LRU(set_index,:) == obj.SetAssociativity);
-
                 res = 1;
             end
             % Update LRU
-            update_LRU = find(obj.LRU(set_index,:) ~= obj.SetAssociativity);
-
-            obj.LRU(set_index, update_LRU) = obj.LRU(set_index, update_LRU) + 1;
-            obj.LRU(set_index, LRU_index(1)) = 1;
+            obj.LRU(set_index,:) = obj.LRU(set_index, :) + 1;
+            obj.LRU(set_index, index) = 1;
             to_display = [to_display, 'LRU (of set) = ', num2str(obj.LRU(set_index, :)), '; '];
             
             % Mark block block as valid
@@ -167,22 +163,20 @@ classdef (ConstructOnLoad = true) Cache < handle
 
                 % MISS Condition
                 % Find LRU block index
-                LRU_index = find(obj.LRU(set_index,:) == obj.SetAssociativity);
-                %disp(obj.LRU(set_index,:))
-                %sprintf('LRU_index = %d',LRU_index(1))
-                %sprintf('tag = %d',tag)
+                [~,LRU_index] = max(obj.LRU(set_index, :));
+
                 % Check if block is dirty
-                if obj.Dirty(set_index, LRU_index(1)) == true
+                if obj.Dirty(set_index, LRU_index) == true
                     % Write tag to lower level
                     to_display = [to_display, 'Block is Dirty; '];
                     %disp('Block is Dirty)')
                     evict = 1;
-                    evicted_tag = obj.Tag(set_index, LRU_index(1));
+                    evicted_tag = obj.Tag(set_index, LRU_index);
                 end
                 % Write Allocation says to load data from main memory into the cache
                 % Update the LRU block
-                obj.Tag(set_index,LRU_index(1)) = tag;
-                index = LRU_index(1);
+                obj.Tag(set_index,LRU_index) = tag;
+                index = LRU_index;
                 % Set Result = MISS
                 result = 0;
             else
@@ -192,17 +186,13 @@ classdef (ConstructOnLoad = true) Cache < handle
                 % HIT Condition
                 % Replace data held in block (Mark as Valid and change Tag)
                 obj.Tag(set_index,index) = tag;
-
-                LRU_index = find(obj.LRU(set_index,:) == obj.SetAssociativity);
                 
                 % Set Result = HIT
                 result = 1;
             end
             % Update LRU
-            update_LRU = find(obj.LRU(set_index,:) ~= obj.SetAssociativity);
-            %disp(update_LRU)
-            obj.LRU(set_index,update_LRU) = obj.LRU(set_index,update_LRU) + 1;
-            obj.LRU(set_index,LRU_index(1)) = 1;
+            obj.LRU(set_index,:) = obj.LRU(set_index, :) + 1;
+            obj.LRU(set_index, index) = 1;
             to_display = [to_display, 'LRU (of set) = ', num2str(obj.LRU(set_index, :)), '; '];
             %disp(obj.LRU(set_index,:))
             % Regardless of result, update valid and dirty
@@ -246,9 +236,6 @@ classdef (ConstructOnLoad = true) Cache < handle
                 %disp("MISS")
                 to_display = [to_display, 'MISS; '];
 
-                LRU_index = find(obj.LRU(set_index,:) == obj.SetAssociativity);
-                index = LRU_index(1);
-
                 % do nothing - for a non-allocate policy, only the main
                 % memory is updated in the event of a miss
                 result = 0;
@@ -258,14 +245,13 @@ classdef (ConstructOnLoad = true) Cache < handle
 
                 % Replace data held in block (Mark as Valid and change Tag)
                 obj.Tag(set_index,index) = tag;
+                
+                % Update LRU
+                obj.LRU(set_index,:) = obj.LRU(set_index, :) + 1;
+                obj.LRU(set_index, index) = 1;
                 result = 1;
             end
             
-            % Update LRU
-            update_LRU = find(obj.LRU(set_index,:) ~= obj.SetAssociativity);
-
-            obj.LRU(set_index,update_LRU) = obj.LRU(set_index,update_LRU) + 1;
-            obj.LRU(set_index,index) = 1;
             to_display = [to_display, 'LRU (of set) = ', num2str(obj.LRU(set_index, :)), '; '];
 
             % Re-evaluate hit and miss rate
@@ -277,9 +263,7 @@ classdef (ConstructOnLoad = true) Cache < handle
                 obj.TotalInd = obj.TotalInd + 1;
             end
             obj.HitRate = obj.TotalHit / obj.TotalInd;
-            obj.MissRate = obj.TotalMiss / obj.TotalInd;
-
-            
+            obj.MissRate = obj.TotalMiss / obj.TotalInd;         
         end
     end
 end
