@@ -1,0 +1,65 @@
+(w) S: 10000, R: 10151; L1 MISS; LRU (of set) = 1  4  3  2; 
+  (read) L2 MISS; LRU (of set) = 1  8  7  6  5  4  3  2;  (+50 Cycles)
+  (read) MM Accessed (+100 Cycles)
+  (write) L1 + L2 Allocate (+0 Cycles)
+ 
+(w) S: 10151, R: 10302; L1 MISS; LRU (of set) = 2  1  4  3; 
+  (read) L2 MISS; LRU (of set) = 1  9  9  9  9  9  9  9;  (+50 Cycles)
+  (read) MM Accessed (+100 Cycles)
+  (write) L1 + L2 Allocate (+0 Cycles)
+ 
+(r) S: 10302, R: 10303; L1 MISS; LRU (of set) = 3  2  1  4; 
+(r) S: 10303, R: 10453; L2 MISS; LRU (of set) = 2   1  10  10  10  10  10  10; 
+MM Accessed
+ 
+(r) S: 10453, R: 10454; L1 HIT; LRU (of set) = 1  3  2  5; 
+ 
+(w) S: 10454, R: 10605; L1 MISS; LRU (of set) = 2  4  3  1; 
+  (read) L2 MISS; LRU (of set) = 2  1  8  7  6  5  4  3;  (+50 Cycles)
+  (read) MM Accessed (+100 Cycles)
+  (write) L1 + L2 Allocate (+0 Cycles)
+ 
+(r) S: 10605, R: 10606; L1 MISS; LRU (of set) = 3  1  4  2; 
+  Eviction Occured at Tag: 424; ; S: 10606, R: 10656
+(r) S: 10656, R: 10806; L2 MISS; LRU (of set) = 4  3  2  1  8  7  6  5; 
+MM Accessed
+ 
+(r) S: 10806, R: 10807; L1 MISS; LRU (of set) = 4  2  1  3; 
+(r) S: 10807, R: 10957; L2 MISS; LRU (of set) = 3   2   1  11  11  11  11  11; 
+MM Accessed
+ 
+(r) S: 10957, R: 10958; L1 MISS; LRU (of set) = 1  3  2  4; 
+  Eviction Occured at Tag: 431; ; S: 10958, R: 11008
+(r) S: 11008, R: 11158; L2 MISS; LRU (of set) = 5   2   3   1  13  13  13  13; 
+MM Accessed
+ 
+(w) S: 11208, R: 11359; L1 MISS; Block is Dirty; LRU (of set) = 2  4  3  1; 
+  Eviction Occured at Tag: 426S: 11158, R: 11208
+  (read) L2 MISS; LRU (of set) = 7   4   2   3   1  15  15  15;  (+50 Cycles)
+  (read) MM Accessed (+100 Cycles)
+  (write) L1 + L2 Allocate (+0 Cycles)
+ 
+(r) S: 11359, R: 11360; L1 MISS; LRU (of set) = 3  1  4  2; 
+(r) S: 11360, R: 11410; L2 HIT; LRU (of set) = 8   1   3   4   2  16  16  16; 
+ 
+(r) S: 11410, R: 11411; L1 MISS; LRU (of set) = 4  2  1  3; 
+(r) S: 11411, R: 11461; L2 HIT; LRU (of set) = 1  4  3  2  9  8  7  6; 
+ 
+(w) S: 11461, R: 11512; L1 MISS; LRU (of set) = 1  3  2  4; 
+  (read) L2 HIT; LRU (of set) = 9   2   1   5   3  17  17  17;  (+50 Cycles)
+  (write) L1 Allocate (+0 Cycles)
+ 
+(r) S: 11512, R: 11513; L1 MISS; LRU (of set) = 2  4  3  1; 
+  Eviction Occured at Tag: 429; ; S: 11513, R: 11563
+(r) S: 11563, R: 11613; L2 HIT; LRU (of set) = 1   4   3   7   2  19  19  19; 
+ 
+(w) S: 11613, R: 11614; L1 HIT; LRU (of set) = 3  1  4  2; 
+ 
+(w) S: 11614, R: 11615; L1 HIT; LRU (of set) = 4  1  5  3; 
+ 
+--------------------------------------------------
+L1 Hit Rate: 6.383%
+L1 Miss Rate: 93.617%
+ 
+L2 Hit Rate: 14.5833%
+L2 Miss Rate: 85.4167%
