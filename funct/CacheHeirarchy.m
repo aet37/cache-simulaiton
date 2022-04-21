@@ -94,8 +94,23 @@ classdef CacheHeirarchy < handle
                         start_e = obj.currentCycle;
                         obj.currentCycle = obj.currentCycle + eviction_cycles;
                         end_e = obj.currentCycle;
+
                         to_disp_evict = [to_disp_evict, 'S: ', num2str(start_e), ', R: ', num2str(end_e)];
                         disp(to_disp_evict)
+                    end
+                    
+                    
+                    
+                    % Add cycle time
+                    if evict_flag
+                        start_op = obj.currentCycle;
+                        obj.currentCycle = obj.currentCycle + obj.cacheVector(ii).AccessLatency;
+                    elseif arrival_time > obj.currentCycle && ~evict_flag
+                        start_op = arrival_time;
+                        obj.currentCycle = arrival_time + obj.cacheVector(ii).AccessLatency;
+                    else
+                        start_op = obj.currentCycle;
+                        obj.currentCycle = obj.currentCycle + obj.cacheVector(ii).AccessLatency;
                     end
                     
                     % Add MM cycles if Write-Back & Write Allocate had to
@@ -115,17 +130,8 @@ classdef CacheHeirarchy < handle
                     if (obj.cacheVector(1).Policy ~= "write-back+write-allocate") && (ii == obj.numCache)
                         obj.currentCycle = obj.currentCycle + 100;
                     end
+                    
                     end_op = obj.currentCycle;
-    
-                    % Add cycle time
-                    start_op = obj.currentCycle;
-                    if arrival_time > obj.currentCycle
-                        obj.currentCycle = arrival_time + obj.cacheVector(ii).AccessLatency;
-                    else
-                        obj.currentCycle = obj.currentCycle + obj.cacheVector(ii).AccessLatency;
-                    end
-                    
-                    
 
                     to_display = ['(w) S: ', num2str(start_op), ', R: ', num2str(end_op), '; L', num2str(ii), ' ', to_display];
                     disp(to_display) 
@@ -184,7 +190,7 @@ classdef CacheHeirarchy < handle
                         start_e = obj.currentCycle;
                         obj.currentCycle = obj.currentCycle + eviction_cycles;
                         end_e = obj.currentCycle;
-                        to_disp_evict = [to_disp_evict, 'S: ', num2str(start_e), ', R: ', num2str(end_e)];
+                        to_disp_evict = [to_disp_evict, '; S: ', num2str(start_e), ', R: ', num2str(end_e)];
                         disp(to_disp_evict)
                     end
 
