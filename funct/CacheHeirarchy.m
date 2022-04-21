@@ -62,7 +62,6 @@ classdef CacheHeirarchy < handle
             else
                 L1_tag = bin2dec([dec2bin(tag) dec2bin(l2_l1)]);
             end
-
             obj.Set_Indices = [L1_index L2_index L3_index];
 
             if op == 'w'
@@ -77,6 +76,25 @@ classdef CacheHeirarchy < handle
                         print('Warning: Not configured for over L3 (reusults may be innacurate) ...')
                         break;
                     end
+                    
+                    % Add MM cycles if Write-Back & Write Allocate had to
+                    % read data from a lower memory
+                    if (obj.cacheVector(1).Policy == "write-back+write-allocate") && (ii == 1) && (res == 0)
+                        [res, ~, ~, to_display] = obj.cacheVector(ii + 1).read(tag,L2_index);
+                        if res == 0
+                            obj.currentCycle = obj.currentCycle + 150;
+                        else
+                            obj.currentCycle = obj.currentCycle + 50;
+                        end
+                        res = 1;
+                    end
+                    
+                    % Add MM cycles if Write-Through & Write Not Allocate is 
+                    % being used since MM is being accessed with every write
+                    if (obj.cacheVector(1).Policy ~= "write-back+write-allocate") && (ii == obj.numCache)
+                        obj.currentCycle = obj.currentCycle + 100;
+                    end
+                    end_op = obj.currentCycle;
     
                     % Add cycle time
                     start_op = obj.currentCycle;
@@ -85,13 +103,14 @@ classdef CacheHeirarchy < handle
                     else
                         obj.currentCycle = obj.currentCycle + obj.cacheVector(ii).AccessLatency;
                     end
-                    end_op = obj.currentCycle;
+                    
+                    
 
                     to_display = ['(w) S: ', num2str(start_op), ', R: ', num2str(end_op), '; L', num2str(ii), ' ', to_display];
                     disp(to_display)
 
                     % Check if an eviction needs to take place
-                    if evict_flag
+                    if evict_flag && obj.cacheVector(ii).Policy == "write-back+write-allocate"
                         to_disp_evict = ['  Eviction Occured at Tag: ', num2str(tag)];
                         
                         % Reconstruct L2 tag
@@ -115,7 +134,7 @@ classdef CacheHeirarchy < handle
                     if res && obj.cacheVector(ii).Policy == "write-back+write-allocate"
                         break;
                     end
-                end
+                end    
             elseif op == 'r'
                 for ii = 1:obj.numCache
                     if ii == 1  % For l1 cache
@@ -149,7 +168,7 @@ classdef CacheHeirarchy < handle
                     disp(to_display)
                  
                     % Check if an eviction needs to take place
-                    if evict_flag & obj.cacheVector(ii).Policy == "write-back+write-allocate"
+                    if evict_flag && obj.cacheVector(ii).Policy == "write-back+write-allocate"
                         to_disp_evict = ['  Eviction Occured at Tag: ', num2str(tag), '; '];
                         
                         % Reconstruct evict tag for L2
