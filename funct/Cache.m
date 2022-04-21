@@ -131,7 +131,7 @@ classdef (ConstructOnLoad = true) Cache < handle
             end
             obj.HitRate = obj.TotalHit / obj.TotalInd;
             obj.MissRate = obj.TotalMiss / obj.TotalInd;
-
+            
         end
         
         % Write Method: Write Back & Write Allocate
@@ -219,6 +219,7 @@ classdef (ConstructOnLoad = true) Cache < handle
             end
             obj.HitRate = obj.TotalHit / obj.TotalInd;
             obj.MissRate = obj.TotalMiss / obj.TotalInd;
+            
         end
 
         % Write Method: Write Through & Non- Write Allocate
@@ -244,6 +245,9 @@ classdef (ConstructOnLoad = true) Cache < handle
             if hit == 0
                 %disp("MISS")
                 to_display = [to_display, 'MISS; '];
+
+                LRU_index = find(obj.LRU(set_index,:) == obj.SetAssociativity);
+                index = LRU_index(1);
 
                 % do nothing - for a non-allocate policy, only the main
                 % memory is updated in the event of a miss
@@ -274,6 +278,8 @@ classdef (ConstructOnLoad = true) Cache < handle
             end
             obj.HitRate = obj.TotalHit / obj.TotalInd;
             obj.MissRate = obj.TotalMiss / obj.TotalInd;
+
+            
         end
     end
 end
