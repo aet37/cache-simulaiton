@@ -66,6 +66,8 @@ classdef CacheHeirarchy < handle
 
             if op == 'w'
                 for ii = 1:obj.numCache
+                    res_read = 0;
+                    printinfo = 0;
                     if ii == 1  % For l1 cache
                         [res, evict_flag, evicted_tag, to_display] = obj.cacheVector(ii).write(L1_tag, L1_index);
                     elseif ii == 2  % For l2 cache
@@ -96,7 +98,6 @@ classdef CacheHeirarchy < handle
                         end_e = obj.currentCycle;
 
                         to_disp_evict = [to_disp_evict, 'S: ', num2str(start_e), ', R: ', num2str(end_e)];
-                        disp(to_disp_evict)
                     end
                     
                     
@@ -116,13 +117,14 @@ classdef CacheHeirarchy < handle
                     % Add MM cycles if Write-Back & Write Allocate had to
                     % read data from a lower memory
                     if (obj.cacheVector(1).Policy == "write-back+write-allocate") && (ii == 1) && (res == 0)
-                        [res, ~, ~, to_display] = obj.cacheVector(ii + 1).read(tag,L2_index);
-                        if res == 0
+                        [res_read, ~, ~, to_disp_sub] = obj.cacheVector(ii + 1).read(tag,L2_index);
+                        if res_read == 0
                             obj.currentCycle = obj.currentCycle + 150;
                         else
                             obj.currentCycle = obj.currentCycle + 50;
                         end
                         res = 1;
+                        printinfo = 1;
                     end
                     
                     % Add MM cycles if Write-Through & Write Not Allocate is 
@@ -134,8 +136,23 @@ classdef CacheHeirarchy < handle
                     end_op = obj.currentCycle;
 
                     to_display = ['(w) S: ', num2str(start_op), ', R: ', num2str(end_op), '; L', num2str(ii), ' ', to_display];
-                    disp(to_display) 
-                    
+                    disp(to_display)
+
+                    if evict_flag && obj.cacheVector(ii).Policy == "write-back+write-allocate"
+                        disp(to_disp_evict)
+                    end
+
+                    if (obj.cacheVector(1).Policy == "write-back+write-allocate") && (ii == 1) && (printinfo == 1)
+                        if res_read == 0
+                            disp(['  (read) L2 ', to_disp_sub, ' (+', num2str(obj.cacheVector(2).AccessLatency), ' Cycles)'])
+                            disp('  (read) MM Accessed (+100 Cycles)')
+                            disp('  (write) L1 + L2 Allocate (+0 Cycles)')
+                        else
+                            disp(['  (read) L2 ', to_disp_sub, ' (+', num2str(obj.cacheVector(2).AccessLatency), ' Cycles)'])
+                            disp('  (write) L1 Allocate (+0 Cycles)')
+                        end
+                    end
+
                     % If there is hit, break out of loop
                     if res && obj.cacheVector(ii).Policy == "write-back+write-allocate"
                         break;
@@ -173,6 +190,10 @@ classdef CacheHeirarchy < handle
 
                     to_display = ['(r) S: ', num2str(start_op), ', R: ', num2str(end_op), '; L', num2str(ii), ' ', to_display];
                     disp(to_display)
+
+                    if ii == obj.numCache && res == 0
+                        disp('MM Accessed')
+                    end
                  
                     % Check if an eviction needs to take place
                     if evict_flag && obj.cacheVector(ii).Policy == "write-back+write-allocate"
