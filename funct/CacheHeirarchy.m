@@ -57,12 +57,18 @@ classdef CacheHeirarchy < handle
             L1_index = l1;
             L2_index = bin2dec([dec2bin(l2_l1) dec2bin(l1)]);
             L3_index = bin2dec([dec2bin(l3_l2) dec2bin(l2_l1) dec2bin(l1)]);
+            if l2_l1 == 1
+                L1_tag = bin2dec(strcat(dec2bin(tag),'01'));
+            else
+                L1_tag = bin2dec([dec2bin(tag) dec2bin(l2_l1)]);
+            end
+
             obj.Set_Indices = [L1_index L2_index L3_index];
 
             if op == 'w'
                 for ii = 1:obj.numCache
                     if ii == 1  % For l1 cache
-                        [res, evict_flag, evicted_tag, to_display] = obj.cacheVector(ii).write(bin2dec([dec2bin(tag) dec2bin(l2_l1)]), L1_index);
+                        [res, evict_flag, evicted_tag, to_display] = obj.cacheVector(ii).write(L1_tag, L1_index);
                     elseif ii == 2  % For l2 cache
                         [res, evict_flag, evicted_tag, to_display] = obj.cacheVector(ii).write(tag, L2_index);
                     elseif ii == 3  % For l3 cache
@@ -87,7 +93,10 @@ classdef CacheHeirarchy < handle
                     % Check if an eviction needs to take place
                     if evict_flag
                         to_disp_evict = ['  Eviction Occured at Tag: ', num2str(tag)];
-
+                        
+                        % Reconstruct L2 tag
+                        evicted_tag = floor(evicted_tag/4);
+                        
                         % Assuming we can only evict to L2 or MM
                         if ~(ii + 1 > obj.numCache)
                             eviction_cycles = obj.evict(ii+1,evicted_tag);
@@ -110,7 +119,7 @@ classdef CacheHeirarchy < handle
             elseif op == 'r'
                 for ii = 1:obj.numCache
                     if ii == 1  % For l1 cache
-                        [res, evict_flag, evicted_tag, to_display] = obj.cacheVector(ii).read(bin2dec([dec2bin(tag) dec2bin(l2_l1)]), l1);
+                        [res, evict_flag, evicted_tag, to_display] = obj.cacheVector(ii).read(L1_tag, l1);
                     elseif ii == 2  % For l2 cache
                         [res, evict_flag, evicted_tag, to_display] = obj.cacheVector(ii).read(tag, bin2dec([dec2bin(l2_l1) dec2bin(l1)]));
                     elseif ii == 3  % For l3 cache
@@ -129,6 +138,12 @@ classdef CacheHeirarchy < handle
                         obj.currentCycle = obj.currentCycle + obj.cacheVector(ii).AccessLatency;
                     end
                     end_op = obj.currentCycle;
+                    
+                    % Check if MM needs to be accessed
+                    if ii == obj.numCache && res == 0
+                        % Add access latency for main memory
+                        obj.currentCycle = obj.currentCycle + 100;
+                    end
 
                     to_display = ['(r) S: ', num2str(start_op), ', R: ', num2str(end_op), '; L', num2str(ii), ' ', to_display];
                     disp(to_display)
@@ -136,9 +151,14 @@ classdef CacheHeirarchy < handle
                     % Check if an eviction needs to take place
                     if evict_flag
                         to_disp_evict = ['  Eviction Occured at Tag: ', num2str(tag), '; '];
+                        
+                        % Reconstruct evict tag for L2
+                        evicted_tag = floor(evicted_tag/4);
                         % Assuming we can only evict to L2 or MM
                         if ~(ii + 1 > obj.numCache)
                             eviction_cycles = obj.evict(ii+1, evicted_tag);
+                        else
+                            eviction_cycles = 100;
                         end
 
                         start_e = obj.currentCycle;
@@ -170,6 +190,7 @@ classdef CacheHeirarchy < handle
             % Outputs:
             %       cycle_time - total cycle time passed from evictions
             %
+
             cycle_time = 0;
             if cache_index > obj.numCache
                 cycle_time = cycle_time + 100;
@@ -178,6 +199,8 @@ classdef CacheHeirarchy < handle
                 % Call for write
                 if evict_flag && cache_index <= obj.numCache
                     % If another function is needed, evict necessary block
+                    % Reconstruct evict tag for L2
+                    evicted_tag = floor(evicted_tag/4);
                     cycle_time = obj.evict(cache_index + 1, evicted_tag);
                 else
                     if cache_index <= obj.numCache

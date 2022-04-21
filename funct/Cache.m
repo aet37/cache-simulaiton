@@ -192,8 +192,6 @@ classdef (ConstructOnLoad = true) Cache < handle
                 % HIT Condition
                 % Replace data held in block (Mark as Valid and change Tag)
                 obj.Tag(set_index,index) = tag;
-
-                LRU_index = find(obj.LRU(set_index,:) == obj.SetAssociativity);
                 
                 % Set Result = HIT
                 result = 1;
@@ -202,7 +200,7 @@ classdef (ConstructOnLoad = true) Cache < handle
             update_LRU = find(obj.LRU(set_index,:) ~= obj.SetAssociativity);
             %disp(update_LRU)
             obj.LRU(set_index,update_LRU) = obj.LRU(set_index,update_LRU) + 1;
-            obj.LRU(set_index,LRU_index(1)) = 1;
+            obj.LRU(set_index,index) = 1;
             to_display = [to_display, 'LRU (of set) = ', num2str(obj.LRU(set_index, :)), '; '];
             %disp(obj.LRU(set_index,:))
             % Regardless of result, update valid and dirty
@@ -244,7 +242,7 @@ classdef (ConstructOnLoad = true) Cache < handle
             if hit == 0
                 %disp("MISS")
                 to_display = [to_display, 'MISS; '];
-
+                
                 % do nothing - for a non-allocate policy, only the main
                 % memory is updated in the event of a miss
                 result = 0;
