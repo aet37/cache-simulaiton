@@ -119,7 +119,7 @@ classdef CacheHeirarchy < handle
                         print('Warning: Not configured for over L3 (reusults may be innacurate) ...')
                         break;
                     end
-    
+                    
                     % Add cycle time
                     if arrival_time > obj.currentCycle
                         start_op = arrival_time;
@@ -132,13 +132,15 @@ classdef CacheHeirarchy < handle
 
                     to_display = ['(r) S: ', num2str(start_op), ', R: ', num2str(end_op), '; L', num2str(ii), ' ', to_display];
                     disp(to_display)
-
+                 
                     % Check if an eviction needs to take place
-                    if evict_flag
+                    if evict_flag & obj.cacheVector(ii).Policy == "write-back+write-allocate"
                         to_disp_evict = ['  Eviction Occured at Tag: ', num2str(tag), '; '];
+                        disp(obj.cacheVector(ii).Policy)
                         % Assuming we can only evict to L2 or MM
                         if ~(ii + 1 > obj.numCache)
                             eviction_cycles = obj.evict(ii+1, evicted_tag);
+                            disp(evicted_tag)
                         end
 
                         start_e = obj.currentCycle;
@@ -170,6 +172,7 @@ classdef CacheHeirarchy < handle
             % Outputs:
             %       cycle_time - total cycle time passed from evictions
             %
+            disp(tag);
             cycle_time = 0;
             if cache_index > obj.numCache
                 cycle_time = cycle_time + 100;
