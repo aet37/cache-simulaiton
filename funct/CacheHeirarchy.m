@@ -77,6 +77,27 @@ classdef CacheHeirarchy < handle
                         break;
                     end
                     
+                    % Check if an eviction needs to take place
+                    if evict_flag && obj.cacheVector(ii).Policy == "write-back+write-allocate"
+                        to_disp_evict = ['  Eviction Occured at Tag: ', num2str(tag)];
+                        
+                        % Reconstruct L2 tag
+                        evicted_tag = floor(evicted_tag/4);
+                        
+                        % Assuming we can only evict to L2 or MM
+                        if ~(ii + 1 > obj.numCache)
+                            eviction_cycles = obj.evict(ii+1,evicted_tag);
+                        else
+                            eviction_cycles = 100;
+                        end
+                        
+                        start_e = obj.currentCycle;
+                        obj.currentCycle = obj.currentCycle + eviction_cycles;
+                        end_e = obj.currentCycle;
+                        to_disp_evict = [to_disp_evict, 'S: ', num2str(start_e), ', R: ', num2str(end_e)];
+                        disp(to_disp_evict)
+                    end
+                    
                     % Add MM cycles if Write-Back & Write Allocate had to
                     % read data from a lower memory
                     if (obj.cacheVector(1).Policy == "write-back+write-allocate") && (ii == 1) && (res == 0)
@@ -107,28 +128,7 @@ classdef CacheHeirarchy < handle
                     
 
                     to_display = ['(w) S: ', num2str(start_op), ', R: ', num2str(end_op), '; L', num2str(ii), ' ', to_display];
-                    disp(to_display)
-
-                    % Check if an eviction needs to take place
-                    if evict_flag && obj.cacheVector(ii).Policy == "write-back+write-allocate"
-                        to_disp_evict = ['  Eviction Occured at Tag: ', num2str(tag)];
-                        
-                        % Reconstruct L2 tag
-                        evicted_tag = floor(evicted_tag/4);
-                        
-                        % Assuming we can only evict to L2 or MM
-                        if ~(ii + 1 > obj.numCache)
-                            eviction_cycles = obj.evict(ii+1,evicted_tag);
-                        else
-                            eviction_cycles = 100;
-                        end
-                        
-                        start_e = obj.currentCycle;
-                        obj.currentCycle = obj.currentCycle + eviction_cycles;
-                        end_e = obj.currentCycle;
-                        to_disp_evict = [to_disp_evict, 'S: ', num2str(start_e), ', R: ', num2str(end_e)];
-                        disp(to_disp_evict)
-                    end
+                    disp(to_display) 
                     
                     % If there is hit, break out of loop
                     if res && obj.cacheVector(ii).Policy == "write-back+write-allocate"

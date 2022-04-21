@@ -98,6 +98,7 @@ classdef (ConstructOnLoad = true) Cache < handle
                     % Follow eviction process
                     evict = 1;
                     evicted_tag = obj.Tag(set_index, LRU_index);
+                    obj.Dirty(set_index,LRU_index) = 0;
                 end
                 % After possible eviction, write tag into set
                 obj.Tag(set_index, LRU_index) = tag;
